@@ -1,19 +1,89 @@
 # AI Dataset Labeling Marketplace
 
-## Description
+An AI-ready web platform for managing dataset annotation projects, annotators, labeling tasks and annotation quality.
 
-AI Dataset Labeling Marketplace is a web platform that connects dataset owners with human annotators. The system helps users upload datasets, assign labeling tasks, monitor progress, manage datasets, and improve annotation quality with AI-assisted tools.
+## Overview
 
-## Status
+AI Dataset Labeling Marketplace is a web-based platform designed to connect dataset owners with data annotators.
 
-Planning Phase
+The platform allows dataset owners to create annotation projects, upload datasets, assign labeling tasks, monitor project progress, review submitted annotations and export completed labeled datasets.
 
-## Technologies
+Annotators receive assigned tasks through their workspace and submit labels through the platform.
 
-- Python
-- Flask
-- MySQL
+The project also provides scope for AI-assisted annotation and quality-control capabilities.
+
+## Current Status
+
+Week 1 - Planning and Project Setup
+
+## User Roles
+
+- Dataset Owner
+- Annotator
+- Administrator
+
+## Planned Core Features
+
+- User Registration and Login
+- Role-Based Access
+- Dataset Management
+- Annotation Project Management
+- Annotator Assignment
+- Annotation Task Management
+- Annotation Workspace
+- Annotation Review
+- Project Progress Tracking
+- Dataset Export
+- Administration
+
+## Technology Stack
+
+### Frontend
+
+- React
 - HTML
 - CSS
 - JavaScript
-- Bootstrap
+
+### Backend
+
+- Python
+- FastAPI
+
+### Database
+
+- PostgreSQL
+
+### ORM
+
+- SQLAlchemy
+
+### Validation
+
+- Pydantic
+
+### Testing
+
+- Pytest
+
+### Version Control
+
+- Git
+- GitHub
+
+## Planned Backend Architecture
+
+```text
+Client
+  |
+  v
+FastAPI Routers
+  |
+  v
+Service Layer
+  |
+  v
+Repository Layer
+  |
+  v
+PostgreSQL

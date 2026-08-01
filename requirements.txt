@@ -1,5 +1,11 @@
-Flask
-mysql-connector-python
-pandas
-numpy
-scikit-learn
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+pydantic
+python-dotenv
+python-jose
+passlib
+bcrypt
+pytest
+httpx
