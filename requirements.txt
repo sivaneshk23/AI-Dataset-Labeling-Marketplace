@@ -10,3 +10,4 @@ bcrypt
 pytest
 httpx
 pydantic-settings
+email-validator
