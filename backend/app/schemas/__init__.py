@@ -4,8 +4,17 @@ from backend.app.schemas.user import (
     UserResponse
 )
 
+from backend.app.schemas.dataset import (
+    DatasetBase,
+    DatasetCreate,
+    DatasetResponse
+)
+
 __all__ = [
     "UserBase",
     "UserCreate",
-    "UserResponse"
+    "UserResponse",
+    "DatasetBase",
+    "DatasetCreate",
+    "DatasetResponse"
 ]
