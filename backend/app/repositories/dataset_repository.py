@@ -5,28 +5,55 @@ from backend.app.models.dataset import Dataset
 
 
 class DatasetRepository:
-    def __init__(self, db: Session):
-        self.db = db
 
-    def create(self, dataset: Dataset) -> Dataset:
-        self.db.add(dataset)
-        self.db.commit()
-        self.db.refresh(dataset)
+    @staticmethod
+    def create(
+        db: Session,
+        dataset: Dataset,
+    ) -> Dataset:
+        db.add(dataset)
+        db.commit()
+        db.refresh(dataset)
+
         return dataset
 
-    def get_by_id(self, dataset_id: int) -> Dataset | None:
-        statement = select(Dataset).where(Dataset.id == dataset_id)
-        return self.db.scalar(statement)
+    @staticmethod
+    def get_by_id(
+        db: Session,
+        dataset_id: int,
+    ) -> Dataset | None:
+        statement = select(Dataset).where(
+            Dataset.id == dataset_id
+        )
 
-    def get_all(self) -> list[Dataset]:
-        statement = select(Dataset).order_by(Dataset.id)
-        return list(self.db.scalars(statement).all())
+        return db.scalar(statement)
 
-    def update(self, dataset: Dataset) -> Dataset:
-        self.db.commit()
-        self.db.refresh(dataset)
+    @staticmethod
+    def get_all(
+        db: Session,
+    ) -> list[Dataset]:
+        statement = select(Dataset).order_by(
+            Dataset.id.desc()
+        )
+
+        return list(
+            db.scalars(statement).all()
+        )
+
+    @staticmethod
+    def update(
+        db: Session,
+        dataset: Dataset,
+    ) -> Dataset:
+        db.commit()
+        db.refresh(dataset)
+
         return dataset
 
-    def delete(self, dataset: Dataset) -> None:
-        self.db.delete(dataset)
-        self.db.commit()
+    @staticmethod
+    def delete(
+        db: Session,
+        dataset: Dataset,
+    ) -> None:
+        db.delete(dataset)
+        db.commit()

@@ -14,7 +14,31 @@ The project also provides scope for AI-assisted annotation and quality-control c
 
 ## Current Status
 
-Week 1 - Planning and Project Setup
+Week 3 - Core Backend APIs and Frontend Integration
+
+### Completed
+
+- Project problem statement finalized
+- System architecture designed
+- ER diagram designed
+- Module architecture established
+- PostgreSQL database schema created
+- FastAPI backend scaffolded
+- SQLAlchemy database foundation implemented
+- User and dataset models implemented
+- Dataset CRUD backend implemented
+- Dataset CRUD frontend implemented
+- Dataset data persistence verified through PostgreSQL
+- React frontend scaffolded with Vite
+- Backend automated model tests passing
+- Frontend production build verified
+- Frontend linting verified
+
+### In Progress
+
+- Review-I authentication and JWT integration
+- Second end-to-end core workflow
+- Review-I local setup verification
 
 ## User Roles
 
