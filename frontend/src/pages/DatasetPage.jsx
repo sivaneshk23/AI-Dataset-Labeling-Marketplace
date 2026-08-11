@@ -21,7 +21,7 @@ function DatasetPage() {
         try {
             const response = await getDatasets();
 
-            setDatasets(response.data || []);
+            setDatasets(response || []);
             setError("");
         } catch (err) {
             setError(err.message);
@@ -38,9 +38,9 @@ function DatasetPage() {
                 const response = await getDatasets();
 
                 if (!cancelled) {
-                    setDatasets(response.data || []);
+                    setDatasets(response || []);
                     setError("");
-                }
+}
             } catch (err) {
                 if (!cancelled) {
                     setError(err.message);

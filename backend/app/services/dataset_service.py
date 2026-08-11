@@ -1,50 +1,102 @@
 from sqlalchemy.orm import Session
 
 from backend.app.models.dataset import Dataset
-from backend.app.repositories.dataset_repository import DatasetRepository
-from backend.app.schemas.dataset import DatasetCreate
+from backend.app.repositories.dataset_repository import (
+    DatasetRepository,
+)
 
 
 class DatasetService:
-    def __init__(self, db: Session):
-        self.repository = DatasetRepository(db)
 
-    def create_dataset(self, dataset_data: DatasetCreate) -> Dataset:
+    @staticmethod
+    def create_dataset(
+        db: Session,
+        title: str,
+        description: str,
+        dataset_type: str,
+    ) -> Dataset:
+
         dataset = Dataset(
-            title=dataset_data.title,
-            description=dataset_data.description,
-            dataset_type=dataset_data.dataset_type,
+            title=title,
+            description=description,
+            dataset_type=dataset_type,
         )
 
-        return self.repository.create(dataset)
+        return DatasetRepository.create(
+            db,
+            dataset,
+        )
 
-    def get_dataset(self, dataset_id: int) -> Dataset | None:
-        return self.repository.get_by_id(dataset_id)
-
-    def get_datasets(self) -> list[Dataset]:
-        return self.repository.get_all()
-
-    def update_dataset(
-        self,
+    @staticmethod
+    def get_dataset(
+        db: Session,
         dataset_id: int,
-        dataset_data: DatasetCreate,
     ) -> Dataset | None:
-        dataset = self.repository.get_by_id(dataset_id)
+
+        return DatasetRepository.get_by_id(
+            db,
+            dataset_id,
+        )
+
+    @staticmethod
+    def get_datasets(
+        db: Session,
+    ) -> list[Dataset]:
+
+        return DatasetRepository.get_all(
+            db,
+        )
+
+    @staticmethod
+    def update_dataset(
+        db: Session,
+        dataset_id: int,
+        title: str | None = None,
+        description: str | None = None,
+        dataset_type: str | None = None,
+    ) -> Dataset:
+
+        dataset = DatasetRepository.get_by_id(
+            db,
+            dataset_id,
+        )
 
         if dataset is None:
-            return None
+            raise ValueError(
+                "Dataset not found."
+            )
 
-        dataset.title = dataset_data.title
-        dataset.description = dataset_data.description
-        dataset.dataset_type = dataset_data.dataset_type
+        if title is not None:
+            dataset.title = title
 
-        return self.repository.update(dataset)
+        if description is not None:
+            dataset.description = description
 
-    def delete_dataset(self, dataset_id: int) -> bool:
-        dataset = self.repository.get_by_id(dataset_id)
+        if dataset_type is not None:
+            dataset.dataset_type = dataset_type
+
+        return DatasetRepository.update(
+            db,
+            dataset,
+        )
+
+    @staticmethod
+    def delete_dataset(
+        db: Session,
+        dataset_id: int,
+    ) -> None:
+
+        dataset = DatasetRepository.get_by_id(
+            db,
+            dataset_id,
+        )
 
         if dataset is None:
-            return False
+            raise ValueError(
+                "Dataset not found."
+            )
 
-        self.repository.delete(dataset)
-        return True
+        DatasetRepository.delete(
+            db,
+            dataset,
+        )

@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+from backend.app.api.jobs import router as job_router
+from backend.app.api.auth import router as auth_router
 from backend.app.api.datasets import router as dataset_router
 
 
@@ -26,8 +27,9 @@ app.add_middleware(
 )
 
 
+app.include_router(auth_router)
 app.include_router(dataset_router)
-
+app.include_router(job_router)
 
 @app.get("/")
 def root():

@@ -1,10 +1,7 @@
-const API_BASE_URL =
-    "http://127.0.0.1:8000";
-
+const API_BASE_URL = "http://127.0.0.1:8000";
 
 function getAuthHeaders() {
-    const token =
-        localStorage.getItem("access_token");
+    const token = localStorage.getItem("access_token");
 
     return token
         ? {
@@ -15,21 +12,15 @@ function getAuthHeaders() {
 
 
 async function handleResponse(response) {
-
     if (!response.ok) {
-
-        let message =
-            "Request failed.";
+        let message = "Request failed.";
 
         try {
-            const errorData =
-                await response.json();
-
+            const errorData = await response.json();
             message =
                 errorData.detail ||
                 errorData.message ||
                 message;
-
         } catch {
             // Keep default message.
         }
@@ -45,10 +36,9 @@ async function handleResponse(response) {
 }
 
 
-export async function getDatasets() {
-
+export async function getJobs() {
     const response = await fetch(
-        `${API_BASE_URL}/api/datasets`,
+        `${API_BASE_URL}/api/jobs`,
         {
             method: "GET",
             headers: {
@@ -61,22 +51,16 @@ export async function getDatasets() {
 }
 
 
-export async function createDataset(datasetData) {
-
+export async function createJob(jobData) {
     const response = await fetch(
-        `${API_BASE_URL}/api/datasets`,
+        `${API_BASE_URL}/api/jobs`,
         {
             method: "POST",
             headers: {
-                "Content-Type":
-                    "application/json",
-
+                "Content-Type": "application/json",
                 ...getAuthHeaders(),
             },
-
-            body: JSON.stringify(
-                datasetData
-            ),
+            body: JSON.stringify(jobData),
         }
     );
 
@@ -84,26 +68,16 @@ export async function createDataset(datasetData) {
 }
 
 
-export async function updateDataset(
-    datasetId,
-    datasetData
-) {
-
+export async function updateJob(jobId, jobData) {
     const response = await fetch(
-        `${API_BASE_URL}/api/datasets/${datasetId}`,
+        `${API_BASE_URL}/api/jobs/${jobId}`,
         {
             method: "PUT",
-
             headers: {
-                "Content-Type":
-                    "application/json",
-
+                "Content-Type": "application/json",
                 ...getAuthHeaders(),
             },
-
-            body: JSON.stringify(
-                datasetData
-            ),
+            body: JSON.stringify(jobData),
         }
     );
 
@@ -111,15 +85,11 @@ export async function updateDataset(
 }
 
 
-export async function deleteDataset(
-    datasetId
-) {
-
+export async function deleteJob(jobId) {
     const response = await fetch(
-        `${API_BASE_URL}/api/datasets/${datasetId}`,
+        `${API_BASE_URL}/api/jobs/${jobId}`,
         {
             method: "DELETE",
-
             headers: {
                 ...getAuthHeaders(),
             },
