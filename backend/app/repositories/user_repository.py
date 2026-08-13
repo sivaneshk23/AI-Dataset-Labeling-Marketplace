@@ -16,7 +16,9 @@ class UserRepository:
             User.email == email
         )
 
-        return db.execute(statement).scalar_one_or_none()
+        return db.execute(
+            statement
+        ).scalar_one_or_none()
 
     @staticmethod
     def get_by_id(
@@ -28,7 +30,22 @@ class UserRepository:
             User.id == user_id
         )
 
-        return db.execute(statement).scalar_one_or_none()
+        return db.execute(
+            statement
+        ).scalar_one_or_none()
+
+    @staticmethod
+    def get_all(
+        db: Session
+    ) -> list[User]:
+
+        statement = select(User).order_by(
+            User.id
+        )
+
+        return list(
+            db.execute(statement).scalars().all()
+        )
 
     @staticmethod
     def create(

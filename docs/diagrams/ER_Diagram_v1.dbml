@@ -1,0 +1,48 @@
+// AI Dataset Labeling Marketplace — Entity Relationship Diagram v1
+// Current PostgreSQL schema (Review-I) — 5 physical tables only
+
+Table users {
+  id integer [pk]
+  name varchar(100) [not null]
+  email varchar(255) [not null, unique]
+  hashed_password varchar(255) [not null]
+  is_active boolean [not null, default: true]
+  created_at timestamp [not null]
+}
+
+Table datasets {
+  id integer [pk]
+  title varchar(150) [not null]
+  description text [not null]
+  dataset_type varchar(50) [not null]
+  created_at timestamp [not null]
+}
+
+Table labeling_jobs {
+  id integer [pk]
+  dataset_id integer [not null, ref: > datasets.id]
+  created_by integer [not null, ref: > users.id]
+  title varchar(150) [not null]
+  description text [not null]
+  status varchar(30) [not null, default: 'open']
+  created_at timestamp [not null]
+}
+
+Table job_assignments {
+  id integer [pk]
+  job_id integer [not null, ref: > labeling_jobs.id]
+  worker_id integer [not null, ref: > users.id]
+  status varchar(30) [not null, default: 'assigned']
+  assigned_at timestamp [not null]
+  Note: 'Foundation table — full assignment workflow not yet implemented in Review-I'
+}
+
+Table reviews {
+  id integer [pk]
+  job_id integer [not null, ref: > labeling_jobs.id]
+  reviewer_id integer [not null, ref: > users.id]
+  rating integer [not null, note: 'CHECK 1-5']
+  comment text
+  created_at timestamp [not null]
+  Note: 'Foundation table — full review workflow not yet implemented in Review-I'
+}

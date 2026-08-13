@@ -4,7 +4,7 @@ import DashboardPage from "./pages/DashboardPage";
 import DatasetPage from "./pages/DatasetPage";
 import JobPage from "./pages/JobPage";
 import LoginPage from "./pages/LoginPage";
-
+import AssignmentPage from "./pages/AssignmentPage";
 import {
     isAuthenticated,
     logoutUser,
@@ -17,7 +17,7 @@ function App() {
     const [showRegister, setShowRegister] = useState(false);
     const [activePage, setActivePage] =
         useState("dashboard");
-
+    
 
     function handleLogin() {
         setAuthenticated(true);
@@ -117,7 +117,18 @@ function App() {
                     >
                         Labeling Jobs
                     </button>
-
+                    <button
+                        className={
+                            activePage === "assignments"
+                                ? "nav-button active"
+                                : "nav-button"
+                        }
+                        onClick={() =>
+                            setActivePage("assignments")
+                        }
+                    >
+                        Assignments
+                    </button>
 
                     <button
                         className="nav-button"
@@ -143,6 +154,9 @@ function App() {
 
                 {activePage === "jobs" && (
                     <JobPage />
+                )}
+                {activePage === "assignments" && (
+                    <AssignmentPage />
                 )}
 
             </main>

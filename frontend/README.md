@@ -1,16 +1,50 @@
-# React + Vite
+# AI Dataset Labeling Marketplace
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> A web-based marketplace for connecting dataset owners with annotators to organize datasets, create labeling jobs, and assign annotation work through a secure and persistent platform.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 1. Overview
 
-## React Compiler
+The AI Dataset Labeling Marketplace is a web application designed to simplify the process of preparing datasets for machine learning and artificial intelligence projects.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Dataset owners can manage datasets and create labeling jobs, while annotators can be assigned to available jobs. The platform provides a structured workflow for managing datasets, labeling jobs, and job assignments while maintaining persistent information in a PostgreSQL database.
 
-## Expanding the ESLint configuration
+The current implementation focuses on the core marketplace workflow and establishes the foundation for future annotation, review, authorization, testing, deployment, and AI-assisted features.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Current Development Status
+
+**Phase:** Phase 2 — Full Development  
+**Week:** Week 3  
+**Capstone Day:** Day 17  
+**Status:** Core backend APIs and frontend integration in progress
+
+---
+
+## 2. Architecture Diagram
+
+The system follows a layered web application architecture:
+
+```text
+Users
+  |
+  v
+React Frontend
+  |
+  | REST API
+  v
+FastAPI Backend
+  |
+  +----------------------+
+  |                      |
+  v                      v
+Service Layer       Authentication
+  |                      |
+  v                      v
+Repository Layer      JWT
+  |
+  v
+SQLAlchemy ORM
+  |
+  v
+PostgreSQL Database
