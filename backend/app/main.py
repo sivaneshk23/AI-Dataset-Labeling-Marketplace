@@ -3,8 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.app.api.jobs import router as job_router
 from backend.app.api.auth import router as auth_router
 from backend.app.api.datasets import router as dataset_router
-
-
+from backend.app.api.assignments import router as assignment_router
+from backend.app.api.users import router as user_router
 app = FastAPI(
     title="AI Dataset Labeling Marketplace API",
     description=(
@@ -30,7 +30,8 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(dataset_router)
 app.include_router(job_router)
-
+app.include_router(assignment_router)
+app.include_router(user_router)
 @app.get("/")
 def root():
     return {

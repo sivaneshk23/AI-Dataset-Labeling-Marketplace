@@ -77,3 +77,9 @@ class UserService:
             db,
             user_id
         )
+    @staticmethod
+    def get_users(
+        db: Session
+    ) -> list[User]:
+
+        return UserRepository.get_all(db)
