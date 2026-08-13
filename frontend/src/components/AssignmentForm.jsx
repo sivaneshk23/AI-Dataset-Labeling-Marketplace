@@ -18,7 +18,7 @@ function AssignmentForm({
     async function handleSubmit(event) {
         event.preventDefault();
 
-        if (!jobId || !workerId) {
+        if (!selectedJobId || !selectedWorkerId) {
             return;
         }
 
@@ -96,8 +96,8 @@ function AssignmentForm({
                 className="primary-button"
                 disabled={
                     loading ||
-                    !jobId ||
-                    !workerId
+                    !selectedJobId ||
+                    !selectedWorkerId
                 }
             >
                 {loading
