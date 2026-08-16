@@ -5,6 +5,7 @@ import DatasetPage from "./pages/DatasetPage";
 import JobPage from "./pages/JobPage";
 import LoginPage from "./pages/LoginPage";
 import AssignmentPage from "./pages/AssignmentPage";
+import ReviewPage from "./pages/ReviewPage";
 import {
     isAuthenticated,
     logoutUser,
@@ -129,6 +130,18 @@ function App() {
                     >
                         Assignments
                     </button>
+                    <button
+                        className={
+                            activePage === "reviews"
+                                ? "nav-button active"
+                                : "nav-button"
+                        }
+                        onClick={() =>
+                            setActivePage("reviews")
+                        }
+            >
+                Reviews
+                    </button>
 
                     <button
                         className="nav-button"
@@ -157,6 +170,9 @@ function App() {
                 )}
                 {activePage === "assignments" && (
                     <AssignmentPage />
+                )}
+                {activePage === "reviews" && (
+                    <ReviewPage />
                 )}
 
             </main>
