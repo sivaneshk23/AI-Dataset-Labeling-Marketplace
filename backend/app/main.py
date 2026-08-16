@@ -5,6 +5,7 @@ from backend.app.api.auth import router as auth_router
 from backend.app.api.datasets import router as dataset_router
 from backend.app.api.assignments import router as assignment_router
 from backend.app.api.users import router as user_router
+from backend.app.api.reviews import router as review_router
 app = FastAPI(
     title="AI Dataset Labeling Marketplace API",
     description=(
@@ -32,6 +33,7 @@ app.include_router(dataset_router)
 app.include_router(job_router)
 app.include_router(assignment_router)
 app.include_router(user_router)
+app.include_router(review_router)
 @app.get("/")
 def root():
     return {

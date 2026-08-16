@@ -3,23 +3,28 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class JobAssignmentCreate(BaseModel):
+class JobAssignmentBase(BaseModel):
     job_id: int
     worker_id: int
-
-
-class JobAssignmentUpdate(BaseModel):
     status: str = Field(
-        min_length=1,
+        default="assigned",
         max_length=30,
     )
 
 
-class JobAssignmentResponse(BaseModel):
+class JobAssignmentCreate(JobAssignmentBase):
+    pass
+
+
+class JobAssignmentUpdate(BaseModel):
+    status: str | None = Field(
+        default=None,
+        max_length=30,
+    )
+
+
+class JobAssignmentResponse(JobAssignmentBase):
     id: int
-    job_id: int
-    worker_id: int
-    status: str
     assigned_at: datetime
 
     model_config = ConfigDict(
