@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-
-from backend.app.api.dependencies import get_current_user
+from backend.app.api.dependencies import (
+    get_current_user,
+    require_roles,
+)
 from backend.app.core.database import get_db
 from backend.app.models.user import User
 from backend.app.schemas.labeling_job import (
@@ -28,7 +30,12 @@ router = APIRouter(
 def create_job(
     job_data: LabelingJobCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(
+    require_roles(
+        "dataset_owner",
+        "administrator",
+    )
+),
 ):
 
     try:
@@ -92,7 +99,12 @@ def update_job(
     job_id: int,
     job_data: LabelingJobUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(
+    require_roles(
+        "dataset_owner",
+        "administrator",
+    )
+),
 ):
 
     try:
@@ -118,7 +130,12 @@ def update_job(
 def delete_job(
     job_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(
+    require_roles(
+        "dataset_owner",
+        "administrator",
+    )
+),
 ):
 
     try:

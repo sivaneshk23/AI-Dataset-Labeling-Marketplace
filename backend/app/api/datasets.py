@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-
+from backend.app.api.dependencies import (
+    require_roles,
+)
 from backend.app.api.dependencies import get_current_user
 from backend.app.core.database import get_db
 from backend.app.models.user import User
@@ -25,7 +27,12 @@ router = APIRouter(
 def create_dataset(
     dataset_data: DatasetCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(
+    require_roles(
+        "dataset_owner",
+        "administrator",
+    )
+),
 ):
     return DatasetService.create_dataset(
         db=db,
@@ -77,7 +84,12 @@ def update_dataset(
     dataset_id: int,
     dataset_data: DatasetCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(
+        require_roles(
+            "dataset_owner",
+            "administrator",
+        )
+    ),
 ):
     try:
         return DatasetService.update_dataset(
@@ -102,7 +114,12 @@ def update_dataset(
 def delete_dataset(
     dataset_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(
+        require_roles(
+            "dataset_owner",
+            "administrator",
+        )
+    ),
 ):
     try:
         DatasetService.delete_dataset(

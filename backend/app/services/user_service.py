@@ -28,13 +28,14 @@ class UserService:
             )
 
         user = User(
-            name=user_data.name,
-            email=user_data.email,
-            hashed_password=hash_password(
-                user_data.password
-            ),
-            is_active=True
-        )
+        name=user_data.name,
+        email=user_data.email,
+        hashed_password=hash_password(
+            user_data.password
+        ),
+        role="annotator",
+        is_active=True,
+    )
 
         return UserRepository.create(
             db,

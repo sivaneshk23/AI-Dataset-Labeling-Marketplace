@@ -1,7 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from backend.app.api.dependencies import get_current_user
+from backend.app.api.dependencies import (
+    get_current_user,
+    require_roles,
+)
 from backend.app.core.database import get_db
 from backend.app.models.user import User
 from backend.app.schemas.review import (
@@ -28,7 +31,12 @@ router = APIRouter(
 def create_review(
     review_data: ReviewCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(
+    require_roles(
+        "dataset_owner",
+        "administrator",
+    )
+),
 ):
 
     try:
@@ -107,7 +115,12 @@ def update_review(
     review_id: int,
     review_data: ReviewUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(
+    require_roles(
+        "dataset_owner",
+        "administrator",
+    )
+),
 ):
 
     try:
@@ -132,7 +145,12 @@ def update_review(
 def delete_review(
     review_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(
+    require_roles(
+        "dataset_owner",
+        "administrator",
+    )
+),
 ):
 
     try:

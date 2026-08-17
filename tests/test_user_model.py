@@ -13,13 +13,14 @@ def test_user_table_structure():
     table = User.__table__
 
     expected_columns = {
-        "id",
-        "name",
-        "email",
-        "hashed_password",
-        "is_active",
-        "created_at"
-    }
+    "id",
+    "name",
+    "email",
+    "hashed_password",
+    "role",
+    "is_active",
+    "created_at"
+}
 
     actual_columns = set(
         table.columns.keys()
@@ -79,6 +80,7 @@ def test_user_response_schema():
         name="Sivanesh",
         email="sivanesh@example.com",
         hashed_password="hashed_password_value",
+        role="annotator",
         is_active=True,
         created_at=datetime.now()
     )

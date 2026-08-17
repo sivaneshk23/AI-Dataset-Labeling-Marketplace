@@ -77,3 +77,27 @@ export function getAccessToken() {
 export function isAuthenticated() {
     return Boolean(getAccessToken());
 }
+export async function getCurrentUser() {
+    const token = getAccessToken();
+
+    if (!token) {
+        return null;
+    }
+
+    const response = await fetch(
+        `${API_BASE_URL}/api/auth/me`,
+        {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+    );
+
+    if (!response.ok) {
+        logoutUser();
+        return null;
+    }
+
+    return response.json();
+}

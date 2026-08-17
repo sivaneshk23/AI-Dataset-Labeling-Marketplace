@@ -4,14 +4,14 @@ from pydantic import (
     BaseModel,
     ConfigDict,
     EmailStr,
-    Field
+    Field,
 )
 
 
 class UserBase(BaseModel):
     name: str = Field(
         min_length=2,
-        max_length=100
+        max_length=100,
     )
 
     email: EmailStr
@@ -20,15 +20,16 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str = Field(
         min_length=8,
-        max_length=128
+        max_length=128,
     )
 
 
 class UserResponse(UserBase):
     id: int
+    role: str
     is_active: bool
     created_at: datetime
 
     model_config = ConfigDict(
-        from_attributes=True
+        from_attributes=True,
     )
