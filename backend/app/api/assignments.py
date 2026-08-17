@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-
+from backend.app.api.dependencies import (
+    require_roles,
+)
 from backend.app.api.dependencies import get_current_user
 from backend.app.core.database import get_db
 from backend.app.models.user import User
@@ -28,7 +30,12 @@ router = APIRouter(
 def create_assignment(
     assignment_data: JobAssignmentCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(
+    require_roles(
+        "dataset_owner",
+        "administrator",
+    )
+),
 ):
     try:
         return JobAssignmentService.create_assignment(
@@ -101,7 +108,12 @@ def update_assignment(
     assignment_id: int,
     assignment_data: JobAssignmentUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(
+    require_roles(
+        "dataset_owner",
+        "administrator",
+    )
+),
 ):
     try:
         return JobAssignmentService.update_assignment(
@@ -124,7 +136,12 @@ def update_assignment(
 def delete_assignment(
     assignment_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(
+    require_roles(
+        "dataset_owner",
+        "administrator",
+    )
+),
 ):
     try:
         JobAssignmentService.delete_assignment(
