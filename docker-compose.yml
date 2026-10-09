@@ -1,0 +1,58 @@
+# Local production-like stack: PostgreSQL + FastAPI + nginx serving the built
+# React bundle. Running `docker compose up` reproduces the deployment topology
+# described in docs/Deployment.md without touching any cloud account.
+
+name: ai-dataset-labeling-marketplace
+
+services:
+  database:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: dataset_labeling_marketplace
+      POSTGRES_USER: marketplace
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in your shell or .env}
+    volumes:
+      - database-data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U marketplace -d dataset_labeling_marketplace"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      ENVIRONMENT: production
+      PORT: "8000"
+      DATABASE_URL: postgresql://marketplace:${POSTGRES_PASSWORD}@database:5432/dataset_labeling_marketplace
+      SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in your shell or .env}
+      CORS_ORIGINS: http://localhost:8080
+      AI_PROVIDER: ${AI_PROVIDER:-auto}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      LOG_LEVEL: INFO
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:8000
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+
+volumes:
+  database-data:

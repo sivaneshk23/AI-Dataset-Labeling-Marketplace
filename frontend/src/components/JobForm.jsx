@@ -6,6 +6,8 @@ const EMPTY_FORM = {
     title: "",
     description: "",
     status: "open",
+    annotation_type: "single_label_text",
+    label_options: "Positive, Negative, Neutral",
 };
 
 
@@ -19,6 +21,8 @@ function createFormFromJob(job) {
         title: job.title,
         description: job.description,
         status: job.status,
+        annotation_type: job.annotation_type || "single_label_text",
+        label_options: (job.label_options || []).join(", "),
     };
 }
 
@@ -52,6 +56,8 @@ function JobForm({
             title: form.title.trim(),
             description: form.description.trim(),
             status: form.status,
+            annotation_type: form.annotation_type,
+            label_options: form.label_options.split(",").map((value) => value.trim()).filter(Boolean),
         });
 
         if (!editingJob) {
@@ -152,6 +158,23 @@ function JobForm({
                 />
             </div>
 
+
+            <div className="form-group">
+                <label htmlFor="annotation_type">
+                    Annotation requirement
+                </label>
+                <select id="annotation_type" name="annotation_type" value={form.annotation_type} onChange={handleChange}>
+                    <option value="single_label_text">Single label · text</option>
+                </select>
+            </div>
+
+            <div className="form-group">
+                <label htmlFor="label_options">
+                    Allowed labels
+                </label>
+                <input id="label_options" name="label_options" type="text" value={form.label_options} onChange={handleChange} placeholder="Positive, Negative, Neutral" />
+                <span className="field-hint">Comma-separated vocabulary used by the human annotator and AI assistant.</span>
+            </div>
 
             <div className="form-group">
                 <label htmlFor="status">

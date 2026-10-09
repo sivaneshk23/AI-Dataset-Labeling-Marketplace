@@ -1,100 +1,75 @@
-const API_BASE_URL = "http://127.0.0.1:8000";
+/**
+ * Labeling job API calls.
+ *
+ * A labeling job (also called an annotation project) is created on top of a
+ * dataset and owns the annotation tasks that annotators work through.
+ */
 
-function getAuthHeaders() {
-    const token = localStorage.getItem("access_token");
-
-    return token
-        ? {
-            Authorization: `Bearer ${token}`,
-        }
-        : {};
-}
+import { buildQueryString, request } from "./apiClient";
 
 
-async function handleResponse(response) {
-    if (!response.ok) {
-        let message = "Request failed.";
-
-        try {
-            const errorData = await response.json();
-            message =
-                errorData.detail ||
-                errorData.message ||
-                message;
-        } catch {
-            // Keep default message.
-        }
-
-        throw new Error(message);
-    }
-
-    if (response.status === 204) {
-        return null;
-    }
-
-    return response.json();
-}
-
-
-export async function getJobs() {
-    const response = await fetch(
-        `${API_BASE_URL}/api/jobs`,
-        {
-            method: "GET",
-            headers: {
-                ...getAuthHeaders(),
-            },
-        }
+/**
+ * List labeling jobs.
+ *
+ * @param {object} [filters] Optional filters.
+ * @param {string} [filters.status] Only jobs with this status.
+ * @returns {Promise<Array<object>>} Labeling jobs visible to the caller.
+ */
+export async function getJobs(filters = {}) {
+    return request(
+        `/api/jobs${buildQueryString({ status_filter: filters.status })}`
     );
-
-    return handleResponse(response);
 }
 
 
+/**
+ * Retrieve a single labeling job.
+ *
+ * @param {number|string} jobId Labeling job identifier.
+ * @returns {Promise<object>} The requested job.
+ */
+export async function getJob(jobId) {
+    return request(`/api/jobs/${jobId}`);
+}
+
+
+/**
+ * Create a labeling job.
+ *
+ * @param {object} jobData Payload with dataset_id, title, description, status.
+ * @returns {Promise<object>} The created job.
+ */
 export async function createJob(jobData) {
-    const response = await fetch(
-        `${API_BASE_URL}/api/jobs`,
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                ...getAuthHeaders(),
-            },
-            body: JSON.stringify(jobData),
-        }
-    );
-
-    return handleResponse(response);
+    return request("/api/jobs", {
+        method: "POST",
+        body: jobData,
+    });
 }
 
 
+/**
+ * Update an existing labeling job.
+ *
+ * @param {number|string} jobId Labeling job identifier.
+ * @param {object} jobData Fields to change.
+ * @returns {Promise<object>} The updated job.
+ */
 export async function updateJob(jobId, jobData) {
-    const response = await fetch(
-        `${API_BASE_URL}/api/jobs/${jobId}`,
-        {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                ...getAuthHeaders(),
-            },
-            body: JSON.stringify(jobData),
-        }
-    );
-
-    return handleResponse(response);
+    return request(`/api/jobs/${jobId}`, {
+        method: "PUT",
+        body: jobData,
+    });
 }
 
 
+/**
+ * Delete a labeling job and its dependent work items.
+ *
+ * @param {number|string} jobId Labeling job identifier.
+ * @returns {Promise<null>} Null when the job has been deleted.
+ */
 export async function deleteJob(jobId) {
-    const response = await fetch(
-        `${API_BASE_URL}/api/jobs/${jobId}`,
-        {
-            method: "DELETE",
-            headers: {
-                ...getAuthHeaders(),
-            },
-        }
-    );
-
-    return handleResponse(response);
+    return request(`/api/jobs/${jobId}`, {
+        method: "DELETE",
+    });
 }

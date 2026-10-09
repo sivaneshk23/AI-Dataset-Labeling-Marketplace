@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from backend.app.models.job_assignment import JobAssignment
 from backend.app.schemas.job_assignment import (
@@ -42,11 +42,9 @@ def test_assignment_response_schema():
         job_id=2,
         worker_id=3,
         status="assigned",
-        assigned_at=datetime.now(),
+        assigned_at=datetime.now(UTC),
     )
 
-    response = JobAssignmentResponse.model_validate(
-        assignment
-    )
+    response = JobAssignmentResponse.model_validate(assignment)
 
     assert response.id == 1

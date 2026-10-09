@@ -1,0 +1,29 @@
+digraph G {
+  graph [rankdir=LR, bgcolor="white", nodesep="0.45", ranksep="0.65"];
+  node [shape=record, fontname="Arial", fontsize=10, style="filled", fillcolor="#F5F7FB", color="#D3DAE7"];
+  edge [fontname="Arial", fontsize=9, color="#657087"];
+  users [label="{users|PK id\lname\lemail UNIQUE\lrole\lis_active\lhashed_password\l}"];
+  datasets [label="{datasets|PK id\lFK owner_id\ltitle\ldataset_type\lsource_filename\lrecord_count\l}"];
+  records [label="{dataset_records|PK id\lFK dataset_id\lrow_number\lsource_key\linput_text\lmetadata_json\l}"];
+  jobs [label="{labeling_jobs|PK id\lFK dataset_id\lFK created_by\ltitle\lstatus\lannotation_type\llabel_options JSON\l}"];
+  assignments [label="{job_assignments|PK id\lFK job_id\lFK worker_id\lstatus\l}"];
+  tasks [label="{annotation_tasks|PK id\lFK job_id\lFK dataset_record_id\lFK assigned_to\linput_text\lstatus\l}"];
+  annotations [label="{annotations|PK id\lFK task_id\lFK annotator_id\llabel\lconfidence\lai_suggested_label\lai_confidence\lstatus\l}"];
+  annotation_reviews [label="{annotation_reviews|PK id\lFK annotation_id\lFK reviewer_id\ldecision\lcomment\l}"];
+  reviews [label="{reviews|PK id\lFK job_id\lFK reviewer_id\lrating\lcomment\l}"];
+  users -> datasets [label="owns 1:N"];
+  datasets -> records [label="contains 1:N"];
+  datasets -> jobs [label="has 1:N"];
+  users -> jobs [label="creates 1:N"];
+  jobs -> assignments [label="has 1:N"];
+  users -> assignments [label="works 1:N"];
+  jobs -> tasks [label="contains 1:N"];
+  records -> tasks [label="becomes 1:0..1"];
+  users -> tasks [label="assigned 1:N"];
+  tasks -> annotations [label="receives 1:N"];
+  users -> annotations [label="submits 1:N"];
+  annotations -> annotation_reviews [label="reviewed 1:N"];
+  users -> annotation_reviews [label="reviews 1:N"];
+  jobs -> reviews [label="rated 1:N"];
+  users -> reviews [label="writes 1:N"];
+}

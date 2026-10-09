@@ -1,15 +1,21 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+"""Authentication endpoints: registration, login and profile."""
+
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
+from backend.app.api.dependencies import get_current_user
 from backend.app.core.database import get_db
-from backend.app.core.security import (
-    create_access_token,
-    decode_access_token,
-)
+from backend.app.core.errors import AuthorizationError
+from backend.app.core.logging import get_logger
+from backend.app.core.security import create_access_token
+from backend.app.models.user import User
 from backend.app.schemas.auth import (
     LoginRequest,
     TokenResponse,
+)
+from backend.app.schemas.response import (
+    APIResponse,
+    success_response,
 )
 from backend.app.schemas.user import (
     UserCreate,
@@ -17,45 +23,43 @@ from backend.app.schemas.user import (
 )
 from backend.app.services.user_service import UserService
 
+logger = get_logger(__name__)
 
 router = APIRouter(
     prefix="/api/auth",
     tags=["Authentication"],
 )
 
-bearer_scheme = HTTPBearer()
-
 
 @router.post(
     "/register",
-    response_model=UserResponse,
+    response_model=APIResponse[UserResponse],
     status_code=status.HTTP_201_CREATED,
+    summary="Register a new dataset owner or annotator account",
 )
 def register(
     user_data: UserCreate,
     db: Session = Depends(get_db),
-):
-    try:
-        return UserService.create_user(
-            db,
-            user_data
-        )
+) -> APIResponse[UserResponse]:
+    """Create a new account and return the public profile."""
+    user = UserService.create_user(db, user_data)
 
-    except ValueError as error:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=str(error),
-        ) from error
+    return success_response(
+        UserResponse.model_validate(user),
+        "Account created successfully. You can now sign in.",
+    )
 
 
 @router.post(
     "/login",
-    response_model=TokenResponse,
+    response_model=APIResponse[TokenResponse],
+    summary="Authenticate and receive a JWT access token",
 )
 def login(
     credentials: LoginRequest,
     db: Session = Depends(get_db),
-):
+) -> APIResponse[TokenResponse]:
+    """Validate credentials and issue a signed JWT."""
     user = UserService.authenticate_user(
         db,
         credentials.email,
@@ -63,65 +67,37 @@ def login(
     )
 
     if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password.",
-            headers={
-                "WWW-Authenticate": "Bearer"
-            },
-        )
+        raise AuthorizationError("Invalid email or password.")
 
     token = create_access_token(
         user_id=user.id,
         email=user.email,
     )
 
-    return TokenResponse(
-        access_token=token,
-        token_type="bearer",
+    logger.info(
+        "User %s logged in successfully.",
+        user.email,
+    )
+
+    return success_response(
+        TokenResponse(
+            access_token=token,
+            token_type="bearer",
+        ),
+        "Login successful.",
     )
 
 
 @router.get(
     "/me",
-    response_model=UserResponse,
+    response_model=APIResponse[UserResponse],
+    summary="Return the authenticated user profile",
 )
-def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(
-        bearer_scheme
-    ),
-    db: Session = Depends(get_db),
-):
-    payload = decode_access_token(
-        credentials.credentials
+def get_authenticated_user(
+    current_user: User = Depends(get_current_user),
+) -> APIResponse[UserResponse]:
+    """Return the profile of the caller, including the role."""
+    return success_response(
+        UserResponse.model_validate(current_user),
+        "Authenticated user profile.",
     )
-
-    if payload is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token.",
-            headers={
-                "WWW-Authenticate": "Bearer"
-            },
-        )
-
-    user_id = payload.get("sub")
-
-    if user_id is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token payload.",
-        )
-
-    user = UserService.get_user(
-        db,
-        int(user_id)
-    )
-
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found.",
-        )
-
-    return user

@@ -1,177 +1,127 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import DatasetForm from "../components/DatasetForm";
 import DatasetList from "../components/DatasetList";
+import DatasetUploadPanel from "../components/DatasetUploadPanel";
+import { getDatasets, createDataset, updateDataset, deleteDataset } from "../services/datasetService";
+import { ErrorBanner, LoadingState, PageHeader, SuccessBanner } from "../components/ui";
 
-import {
-    createDataset,
-    deleteDataset,
-    getDatasets,
-    updateDataset,
-} from "../services/datasetService";
 
 function DatasetPage() {
     const [datasets, setDatasets] = useState([]);
+    const [selectedId, setSelectedId] = useState(null);
+    const [editingDataset, setEditingDataset] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [editingDataset, setEditingDataset] =
-        useState(null);
     const [error, setError] = useState("");
+    const [notice, setNotice] = useState("");
 
-    async function loadDatasets() {
+    const loadDatasets = useCallback(async () => {
+        setLoading(true);
+        setError("");
         try {
             const response = await getDatasets();
-
             setDatasets(response || []);
-            setError("");
-        } catch (err) {
-            setError(err.message);
+        } catch (requestError) {
+            setError(requestError.message || "Unable to load datasets.");
         } finally {
             setLoading(false);
         }
-    }
+    }, []);
 
     useEffect(() => {
         let cancelled = false;
-
-        async function fetchDatasets() {
-            try {
-                const response = await getDatasets();
-
-                if (!cancelled) {
-                    setDatasets(response || []);
-                    setError("");
-}
-            } catch (err) {
-                if (!cancelled) {
-                    setError(err.message);
-                }
-            } finally {
-                if (!cancelled) {
-                    setLoading(false);
-                }
-            }
+        async function initialLoad() {
+            if (cancelled) return;
+            await loadDatasets();
         }
-
-        fetchDatasets();
-
-        return () => {
-            cancelled = true;
-        };
-    }, []);
+        initialLoad();
+        return () => { cancelled = true; };
+    }, [loadDatasets]);
 
     async function handleSubmit(datasetData) {
         setError("");
-
+        setNotice("");
         try {
             if (editingDataset) {
-                await updateDataset(
-                    editingDataset.id,
-                    datasetData
-                );
-
+                await updateDataset(editingDataset.id, datasetData);
+                setNotice("Dataset updated successfully.");
                 setEditingDataset(null);
             } else {
-                await createDataset(datasetData);
+                const created = await createDataset(datasetData);
+                setSelectedId(created.id);
+                setNotice("Dataset created. Upload the source file next.");
             }
-
             await loadDatasets();
-        } catch (err) {
-            setError(err.message);
-            throw err;
+        } catch (requestError) {
+            setError(requestError.message || "Unable to save the dataset.");
+            throw requestError;
         }
     }
 
     async function handleDelete(datasetId) {
-        const confirmed = window.confirm(
-            "Are you sure you want to delete this dataset?"
-        );
-
-        if (!confirmed) {
-            return;
-        }
-
+        if (!window.confirm("Delete this dataset and its dependent labeling work?")) return;
         setError("");
-
         try {
             await deleteDataset(datasetId);
-
-            if (editingDataset?.id === datasetId) {
-                setEditingDataset(null);
-            }
-
+            if (selectedId === datasetId) setSelectedId(null);
+            if (editingDataset?.id === datasetId) setEditingDataset(null);
+            setNotice("Dataset deleted successfully.");
             await loadDatasets();
-        } catch (err) {
-            setError(err.message);
+        } catch (requestError) {
+            setError(requestError.message || "Unable to delete the dataset.");
         }
     }
 
+    const selectedDataset = datasets.find((dataset) => dataset.id === selectedId) || datasets[0] || null;
+
     return (
         <section className="page">
-            <div className="page-heading">
-                <div>
-                    <p className="eyebrow">
-                        Core Module
-                    </p>
-
-                    <h1>Datasets</h1>
-
-                    <p>
-                        Manage datasets available for
-                        annotation and labeling workflows.
-                    </p>
-                </div>
-
-                <button
-                    className="secondary-button"
-                    onClick={() => {
-                        setLoading(true);
-                        loadDatasets();
-                    }}
-                >
-                    Refresh
-                </button>
-            </div>
-
-            {error && (
-                <div className="error-banner">
-                    {error}
-                </div>
-            )}
+            <PageHeader
+                eyebrow="Core data module"
+                title="Datasets"
+                description="Create a dataset, upload validated source records, then turn those records into annotation tasks."
+                actions={<button className="secondary-button" type="button" onClick={loadDatasets}>Refresh</button>}
+            />
+            <ErrorBanner message={error} />
+            <SuccessBanner message={notice} />
 
             <div className="dataset-layout">
                 <DatasetForm
                     editingDataset={editingDataset}
                     onSubmit={handleSubmit}
-                    onCancel={() =>
-                        setEditingDataset(null)
-                    }
+                    onCancel={() => setEditingDataset(null)}
                 />
-
                 <div className="dataset-results">
-                    <div className="section-heading">
-                        <div>
-                            <p className="eyebrow">
-                                PostgreSQL Data
-                            </p>
-
-                            <h2>
-                                Available Datasets
-                            </h2>
-                        </div>
-
-                        <span className="count-badge">
-                            {datasets.length}
-                        </span>
-                    </div>
-
-                    <DatasetList
-                        datasets={datasets}
-                        loading={loading}
-                        onEdit={setEditingDataset}
-                        onDelete={handleDelete}
-                    />
+                    {loading && datasets.length === 0 ? (
+                        <LoadingState message="Loading datasets…" />
+                    ) : (
+                        <>
+                            <div className="section-heading">
+                                <div>
+                                    <p className="eyebrow">PostgreSQL source registry</p>
+                                    <h2>Available datasets</h2>
+                                </div>
+                                <span className="count-badge">{datasets.length}</span>
+                            </div>
+                            <DatasetList
+                                datasets={datasets}
+                                loading={loading}
+                                onEdit={setEditingDataset}
+                                onDelete={handleDelete}
+                                onSelect={setSelectedId}
+                            />
+                        </>
+                    )}
                 </div>
             </div>
+
+            {selectedDataset ? (
+                <DatasetUploadPanel dataset={selectedDataset} onUploaded={loadDatasets} />
+            ) : (
+                <div className="content-card">
+                    <p className="muted">Create or select a dataset to upload source records.</p>
+                </div>
+            )}
         </section>
     );
 }

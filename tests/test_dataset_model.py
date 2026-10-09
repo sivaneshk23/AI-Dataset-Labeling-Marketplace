@@ -1,86 +1,73 @@
-from datetime import datetime
+"""Dataset ORM model and schema tests."""
+
+from datetime import UTC, datetime
+
+import pytest
+from pydantic import ValidationError
 
 from backend.app.models.dataset import Dataset
 from backend.app.schemas.dataset import (
     DatasetCreate,
-    DatasetResponse
+    DatasetResponse,
 )
 
 
 def test_dataset_table():
-
+    """The datasets table exposes the expected columns."""
     table = Dataset.__table__
 
     expected = {
         "id",
+        "owner_id",
+        "source_filename",
+        "source_format",
+        "source_size_bytes",
+        "record_count",
+        "uploaded_at",
         "title",
         "description",
         "dataset_type",
-        "created_at"
+        "created_at",
     }
 
     assert set(table.columns.keys()) == expected
+    assert table.c.id.primary_key is True
+    assert table.c.title.nullable is False
 
 
 def test_create_schema():
-
+    """A valid dataset payload is accepted."""
     dataset = DatasetCreate(
         title="Vehicle Images",
         description="Image dataset for object detection.",
-        dataset_type="Computer Vision"
+        dataset_type="Computer Vision",
     )
 
     assert dataset.title == "Vehicle Images"
+    assert dataset.dataset_type == "Computer Vision"
+
+
+def test_create_schema_rejects_short_title():
+    """Titles shorter than three characters are rejected."""
+    with pytest.raises(ValidationError):
+        DatasetCreate(
+            title="ab",
+            description="Image dataset for object detection.",
+            dataset_type="Computer Vision",
+        )
 
 
 def test_response_schema():
-
+    """The response schema validates ORM instances."""
     orm_dataset = Dataset(
         id=1,
         title="Vehicle Images",
         description="Image dataset",
         dataset_type="Computer Vision",
-        created_at=datetime.now()
+        created_at=datetime.now(UTC),
     )
 
-    response = DatasetResponse.model_validate(
-        orm_dataset
-    )
+    response = DatasetResponse.model_validate(orm_dataset)
 
     assert response.id == 1
-
-
-if __name__ == "__main__":
-
-    tests = [
-        test_dataset_table,
-        test_create_schema,
-        test_response_schema
-    ]
-
-    passed = 0
-
-    print("\n===== DATASET MODEL TESTS =====\n")
-
-    for test in tests:
-
-        try:
-            test()
-
-            print(
-                f"{test.__name__}: PASS"
-            )
-
-            passed += 1
-
-        except Exception as error:
-
-            print(
-                f"{test.__name__}: FAIL"
-            )
-
-            print(error)
-
-    print(
-        f"\nResult: {passed}/{len(tests)} tests passed."
-    )
+    assert response.title == "Vehicle Images"

@@ -1,0 +1,107 @@
+# Tooling configuration for the AI Dataset Labeling Marketplace.
+#
+# Keeping ruff, pytest and coverage settings in one committed file means the
+# local developer experience and the GitHub Actions pipeline (Section 9.3) run
+# exactly the same checks, which is a Review-II requirement.
+
+[project]
+name = "ai-dataset-labeling-marketplace"
+version = "1.1.0"
+description = "Marketplace platform for managing dataset annotation projects, annotators, labeling tasks, annotation quality review and AI-assisted labelling."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+    { name = "Sivanesh K" },
+]
+
+# ---------------------------------------------------------------------------
+# Ruff - the linter executed by Step 3 of the CI pipeline.
+# ---------------------------------------------------------------------------
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+exclude = [
+    ".git",
+    ".github",
+    ".ruff_cache",
+    ".pytest_cache",
+    ".venv",
+    "venv",
+    "__pycache__",
+    "htmlcov",
+    "node_modules",
+    "frontend/dist",
+    "frontend/node_modules",
+    "dist",
+    "build",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # import sorting
+    "N",    # pep8 naming
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "C4",   # flake8-comprehensions
+    "SIM",  # flake8-simplify
+    "ISC",  # implicit string concatenation
+    "DTZ",  # flake8-datetimez
+    "PTH",  # flake8-use-pathlib
+    "RUF",  # ruff specific rules
+]
+
+ignore = [
+    # FastAPI dependency injection is *designed* to call Depends() in the
+    # argument defaults of path operation functions, so B008 is a false
+    # positive for this project layout.
+    "B008",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Test modules intentionally repeat literal values for readability.
+"tests/*" = ["N806"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["backend", "tests"]
+
+# ---------------------------------------------------------------------------
+# Pytest - run from the repository root so `backend` is importable.
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "-ra",
+    "--cov=backend",
+    "--cov-report=term-missing:skip-covered",
+    "--cov-report=xml:coverage.xml",
+]
+markers = [
+    "integration: end-to-end tests that exercise the full API workflow",
+]
+
+# ---------------------------------------------------------------------------
+# Coverage - Review-II requires >= 40% of the business-logic (service) layer.
+# ---------------------------------------------------------------------------
+[tool.coverage.run]
+branch = false
+source = ["backend"]
+omit = [
+    "backend/seed_demo_data.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+]

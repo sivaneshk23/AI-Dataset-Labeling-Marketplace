@@ -248,3 +248,6 @@ backend/
     │
     └── services/
         └── __init__.py
+## As-built v2 update
+
+The current module graph includes `dataset_import_service.py`, `dataset_record_service.py`, persisted `DatasetRecord`/`dataset_record_repository.py`, administrator user management, export UI, and the AI provider/quality modules. The authoritative current diagram is `docs/diagrams/Module_Diagram_v2.png` with editable `Module_Diagram_v2.dot`.

@@ -1,0 +1,32 @@
+digraph G {
+  rankdir=LR; graph [bgcolor="white", pad="0.2", nodesep="0.5", ranksep="0.8"];
+  node [shape=box, style="rounded,filled", fontname="Arial", fontsize=12, margin="0.16,0.10", fillcolor="#F5F7FB", color="#D3DAE7", fontcolor="#172033"];
+  edge [fontname="Arial", fontsize=10, color="#657087", arrowsize=0.7];
+
+  subgraph cluster_client { label="Client / Presentation"; color="#C7D0F7"; style="rounded";
+    browser [label="Browser\nReact 19 + Vite\nResponsive UI"];
+  }
+  subgraph cluster_backend { label="Application Boundary"; color="#B7E3D0"; style="rounded";
+    api [label="FastAPI REST API\n/api/* + OpenAPI"];
+    auth [label="JWT + bcrypt\nRBAC + validation"];
+    services [label="Service Layer\nBusiness workflows"];
+    repos [label="Repository Layer\nSQLAlchemy ORM"];
+    ai [label="AI Enhancement\nLocal TF/cosine KNN\nOptional Gemini"];
+    quality [label="Quality Engine\nExplainable scoring"];
+  }
+  subgraph cluster_data { label="Managed Data Boundary"; color="#F3D5AC"; style="rounded";
+    db [label="PostgreSQL 15+\nRelational workflow data"];
+    records [label="Dataset Records\nImported CSV/JSON/JSONL/XLSX"];
+  }
+  external [label="Optional External AI\nGoogle Gemini API", fillcolor="#F2EDFF", color="#D5C8FB"];
+  hosting [label="Production Hosting\nRender API + PostgreSQL\nVercel React", fillcolor="#EAF2FF", color="#C3D8FB"];
+
+  browser -> api [label="HTTPS / JSON / multipart"];
+  api -> auth; api -> services; services -> repos; repos -> db;
+  services -> ai [label="suggest / insights"];
+  ai -> quality [label="quality signals"];
+  ai -> external [label="optional / fallback-safe"];
+  db -> records [dir=both, label="source rows"];
+  hosting -> browser [label="public HTTPS"];
+  hosting -> api [label="public HTTPS"];
+}

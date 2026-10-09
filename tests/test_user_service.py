@@ -69,18 +69,20 @@ def test_create_user_duplicate_email():
         is_active=True,
     )
 
-    with patch(
-        "backend.app.services.user_service.UserRepository.get_by_email",
-        return_value=existing_user,
-    ):
-        with pytest.raises(
+    with (
+        patch(
+            "backend.app.services.user_service.UserRepository.get_by_email",
+            return_value=existing_user,
+        ),
+        pytest.raises(
             ValueError,
-            match="A user with this email already exists.",
-        ):
-            UserService.create_user(
-                db,
-                user_data,
-            )
+            match=r"A user with this email already exists\.",
+        ),
+    ):
+        UserService.create_user(
+            db,
+            user_data,
+        )
 
 
 def test_authenticate_user_success(monkeypatch):
