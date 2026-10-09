@@ -7,6 +7,7 @@ function RegisterPage({ onRegistered, onBackToLogin }) {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [role, setRole] = useState("annotator");
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -25,6 +26,7 @@ function RegisterPage({ onRegistered, onBackToLogin }) {
                 name,
                 email,
                 password,
+                role,
             });
 
             setSuccess(
@@ -118,6 +120,29 @@ function RegisterPage({ onRegistered, onBackToLogin }) {
                         required
                     />
 
+                    <label htmlFor="role">
+                        Account type
+                    </label>
+
+                    <select
+                        id="role"
+                        value={role}
+                        onChange={(event) =>
+                            setRole(event.target.value)
+                        }
+                    >
+                        <option value="annotator">
+                            Annotator — label assigned tasks
+                        </option>
+                        <option value="dataset_owner">
+                            Dataset owner — manage datasets and jobs
+                        </option>
+                    </select>
+
+                    <p className="form-help">
+                        Administrators are created by an existing
+                        administrator and cannot self-register.
+                    </p>
 
                     {error && (
                         <div className="error-message">

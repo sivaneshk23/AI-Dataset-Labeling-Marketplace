@@ -1,130 +1,99 @@
-const API_BASE_URL =
-    "http://127.0.0.1:8000";
+/**
+ * Dataset API calls.
+ *
+ * Datasets are the top level container of the platform: a dataset is described
+ * by its type and then prepared for labeling through one or more labeling jobs.
+ */
+
+import { buildQueryString, request } from "./apiClient";
 
 
-function getAuthHeaders() {
-    const token =
-        localStorage.getItem("access_token");
-
-    return token
-        ? {
-            Authorization: `Bearer ${token}`,
-        }
-        : {};
-}
-
-
-async function handleResponse(response) {
-
-    if (!response.ok) {
-
-        let message =
-            "Request failed.";
-
-        try {
-            const errorData =
-                await response.json();
-
-            message =
-                errorData.detail ||
-                errorData.message ||
-                message;
-
-        } catch {
-            // Keep default message.
-        }
-
-        throw new Error(message);
-    }
-
-    if (response.status === 204) {
-        return null;
-    }
-
-    return response.json();
-}
-
-
-export async function getDatasets() {
-
-    const response = await fetch(
-        `${API_BASE_URL}/api/datasets`,
-        {
-            method: "GET",
-            headers: {
-                ...getAuthHeaders(),
-            },
-        }
+/**
+ * List every dataset.
+ *
+ * @param {object} [filters] Optional filters.
+ * @param {string} [filters.datasetType] Only datasets of this type.
+ * @returns {Promise<Array<object>>} Datasets visible to the caller.
+ */
+export async function getDatasets(filters = {}) {
+    return request(
+        `/api/datasets${buildQueryString({
+            dataset_type: filters.datasetType,
+        })}`
     );
-
-    return handleResponse(response);
 }
 
 
+/**
+ * Retrieve a single dataset.
+ *
+ * @param {number|string} datasetId Dataset identifier.
+ * @returns {Promise<object>} The requested dataset.
+ */
+export async function getDataset(datasetId) {
+    return request(`/api/datasets/${datasetId}`);
+}
+
+
+/**
+ * Create a dataset.
+ *
+ * @param {object} datasetData Payload with title, description, dataset_type.
+ * @returns {Promise<object>} The created dataset.
+ */
 export async function createDataset(datasetData) {
-
-    const response = await fetch(
-        `${API_BASE_URL}/api/datasets`,
-        {
-            method: "POST",
-            headers: {
-                "Content-Type":
-                    "application/json",
-
-                ...getAuthHeaders(),
-            },
-
-            body: JSON.stringify(
-                datasetData
-            ),
-        }
-    );
-
-    return handleResponse(response);
+    return request("/api/datasets", {
+        method: "POST",
+        body: datasetData,
+    });
 }
 
 
-export async function updateDataset(
-    datasetId,
-    datasetData
-) {
-
-    const response = await fetch(
-        `${API_BASE_URL}/api/datasets/${datasetId}`,
-        {
-            method: "PUT",
-
-            headers: {
-                "Content-Type":
-                    "application/json",
-
-                ...getAuthHeaders(),
-            },
-
-            body: JSON.stringify(
-                datasetData
-            ),
-        }
-    );
-
-    return handleResponse(response);
+/**
+ * Update an existing dataset.
+ *
+ * @param {number|string} datasetId Dataset identifier.
+ * @param {object} datasetData Fields to change.
+ * @returns {Promise<object>} The updated dataset.
+ */
+export async function updateDataset(datasetId, datasetData) {
+    return request(`/api/datasets/${datasetId}`, {
+        method: "PUT",
+        body: datasetData,
+    });
 }
 
 
-export async function deleteDataset(
-    datasetId
-) {
+/**
+ * Delete a dataset.
+ *
+ * @param {number|string} datasetId Dataset identifier.
+ * @returns {Promise<null>} Null when the dataset has been deleted.
+ */
+export async function deleteDataset(datasetId) {
+    return request(`/api/datasets/${datasetId}`, {
+        method: "DELETE",
+    });
+}
 
-    const response = await fetch(
-        `${API_BASE_URL}/api/datasets/${datasetId}`,
-        {
-            method: "DELETE",
+/**
+ * Upload and parse a dataset file.
+ *
+ * @param {number|string} datasetId Dataset identifier.
+ * @param {File} file CSV, JSON, JSONL or XLSX file.
+ * @param {object} options Upload options.
+ * @returns {Promise<object>} Import summary.
+ */
+export async function uploadDataset(datasetId, file, options = {}) {
+    const formData = new FormData();
+    formData.append("file", file);
+    if (options.textColumn) {
+        formData.append("text_column", options.textColumn);
+    }
+    formData.append("replace_existing", options.replaceExisting ? "true" : "false");
 
-            headers: {
-                ...getAuthHeaders(),
-            },
-        }
-    );
-
-    return handleResponse(response);
+    return request(`/api/datasets/${datasetId}/upload`, {
+        method: "POST",
+        body: formData,
+    });
 }

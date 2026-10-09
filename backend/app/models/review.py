@@ -10,6 +10,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column
 
 from backend.app.core.database import Base
+from backend.app.core.time import utc_now
 
 
 class Review(Base):
@@ -58,6 +59,6 @@ class Review(Base):
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
-        default=datetime.utcnow,
+        default=utc_now,
         nullable=False,
     )

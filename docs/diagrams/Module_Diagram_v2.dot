@@ -1,0 +1,15 @@
+digraph G {
+  rankdir=LR; graph [bgcolor="white", nodesep="0.5", ranksep="0.8"];
+  node [shape=box, style="rounded,filled", fontname="Arial", fontsize=11, fillcolor="#F5F7FB", color="#D3DAE7"];
+  edge [color="#657087", arrowsize=0.7];
+  frontend [label="frontend/src\nReact pages + components\nAPI client + services", fillcolor="#EEF1FD", color="#C7D0F7"];
+  api [label="backend/app/api\nRouters / HTTP contract"];
+  core [label="backend/app/core\nConfig / security / middleware / errors"];
+  schemas [label="backend/app/schemas\nPydantic validation"];
+  services [label="backend/app/services\nBusiness logic + workflow state"];
+  ai [label="backend/app/services/ai\nProvider registry + KNN + Gemini + quality"];
+  repos [label="backend/app/repositories\nPersistence access"];
+  models [label="backend/app/models\nSQLAlchemy entities"];
+  db [label="PostgreSQL\nusers → datasets → records → jobs → tasks → annotations → reviews"];
+  frontend -> api; api -> core; api -> schemas; api -> services; services -> ai; services -> repos; repos -> models; models -> db; ai -> repos [label="approved examples"];
+}

@@ -4,6 +4,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class ReviewCreate(BaseModel):
+    """Payload for creating a marketplace review."""
+
     job_id: int
 
     rating: int = Field(
@@ -18,6 +20,8 @@ class ReviewCreate(BaseModel):
 
 
 class ReviewUpdate(BaseModel):
+    """Payload for updating a marketplace review."""
+
     rating: int | None = Field(
         default=None,
         ge=1,
@@ -31,6 +35,8 @@ class ReviewUpdate(BaseModel):
 
 
 class ReviewResponse(BaseModel):
+    """Marketplace review returned by the API."""
+
     id: int
     job_id: int
     reviewer_id: int

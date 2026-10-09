@@ -3,6 +3,7 @@ function DatasetList({
     loading,
     onEdit,
     onDelete,
+    onSelect,
 }) {
     if (loading) {
         return (
@@ -29,6 +30,7 @@ function DatasetList({
             {datasets.map((dataset) => (
                 <article
                     className="dataset-card"
+                    onClick={() => onSelect?.(dataset.id)}
                     key={dataset.id}
                 >
                     <div className="dataset-card-header">
@@ -60,9 +62,20 @@ function DatasetList({
                         <div className="card-actions">
                             <button
                                 className="secondary-button"
-                                onClick={() =>
-                                    onEdit(dataset)
-                                }
+                                onClick={(event) => {
+                                    event.stopPropagation();
+                                    onSelect?.(dataset.id);
+                                }}
+                            >
+                                Manage upload
+                            </button>
+
+                            <button
+                                className="secondary-button"
+                                onClick={(event) => {
+                                    event.stopPropagation();
+                                    onEdit(dataset);
+                                }}
                             >
                                 Edit
                             </button>

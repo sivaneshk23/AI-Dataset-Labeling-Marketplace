@@ -211,3 +211,6 @@ The architecture is designed to provide:
 - Clear database access
 - Modular development
 - Easier future expansion
+## As-built v2 update
+
+The final architecture adds a bounded dataset ingestion boundary, persisted source records, owner-scoped authorization, configurable label vocabularies and the AI-assisted annotation/quality layer. See `docs/diagrams/Architecture_Diagram_v2.png` and editable `Architecture_Diagram_v2.dot` for the current topology.

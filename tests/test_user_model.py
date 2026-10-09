@@ -1,32 +1,32 @@
-from datetime import datetime
+"""User ORM model and schema tests."""
 
+from datetime import UTC, datetime
+
+import pytest
 from pydantic import ValidationError
 
 from backend.app.models.user import User
 from backend.app.schemas.user import (
     UserCreate,
-    UserResponse
+    UserResponse,
 )
 
 
 def test_user_table_structure():
+    """The users table exposes the expected columns and constraints."""
     table = User.__table__
 
     expected_columns = {
-    "id",
-    "name",
-    "email",
-    "hashed_password",
-    "role",
-    "is_active",
-    "created_at"
-}
+        "id",
+        "name",
+        "email",
+        "hashed_password",
+        "role",
+        "is_active",
+        "created_at",
+    }
 
-    actual_columns = set(
-        table.columns.keys()
-    )
-
-    assert actual_columns == expected_columns
+    assert set(table.columns.keys()) == expected_columns
 
     assert table.c.id.primary_key is True
     assert table.c.email.unique is True
@@ -35,46 +35,75 @@ def test_user_table_structure():
 
 
 def test_valid_user_create_schema():
+    """A valid registration payload is accepted."""
     user = UserCreate(
         name="Sivanesh",
         email="sivanesh@example.com",
-        password="securepass123"
+        password="securepass123",
     )
 
     assert user.name == "Sivanesh"
     assert user.email == "sivanesh@example.com"
     assert user.password == "securepass123"
+    assert user.role == "annotator"
+
+
+def test_dataset_owner_role_can_self_register():
+    """The dataset owner role is available during registration."""
+    user = UserCreate(
+        name="Owner",
+        email="owner@example.com",
+        password="securepass123",
+        role="dataset-owner",
+    )
+
+    assert user.role == "dataset_owner"
+
+
+def test_administrator_role_cannot_self_register():
+    """Administrator accounts are created by an administrator only."""
+    with pytest.raises(ValidationError):
+        UserCreate(
+            name="Owner",
+            email="owner@example.com",
+            password="securepass123",
+            role="administrator",
+        )
+
+
+def test_invalid_role_is_rejected():
+    """Unknown roles are rejected by the schema."""
+    with pytest.raises(ValidationError):
+        UserCreate(
+            name="Owner",
+            email="owner@example.com",
+            password="securepass123",
+            role="superuser",
+        )
 
 
 def test_invalid_email():
-    try:
+    """Malformed e-mail addresses are rejected."""
+    with pytest.raises(ValidationError):
         UserCreate(
             name="Sivanesh",
             email="invalid-email",
-            password="securepass123"
+            password="securepass123",
         )
-
-        assert False
-
-    except ValidationError:
-        pass
 
 
 def test_short_password():
-    try:
+    """Passwords shorter than eight characters are rejected."""
+    with pytest.raises(ValidationError):
         UserCreate(
             name="Sivanesh",
             email="sivanesh@example.com",
-            password="123"
+            password="123",
         )
 
-        assert False
 
-    except ValidationError:
-        pass
-
-
-def test_user_response_schema():
+def test_user_response_schema_hides_password():
+    """The public response schema never exposes the password hash."""
     orm_user = User(
         id=1,
         name="Sivanesh",
@@ -82,76 +111,12 @@ def test_user_response_schema():
         hashed_password="hashed_password_value",
         role="annotator",
         is_active=True,
-        created_at=datetime.now()
+        created_at=datetime.now(UTC),
     )
 
-    response = UserResponse.model_validate(
-        orm_user
-    )
+    response = UserResponse.model_validate(orm_user)
 
     assert response.id == 1
     assert response.name == "Sivanesh"
     assert response.is_active is True
-
-    # Sensitive information must not appear
-    # in the public response schema.
-    assert not hasattr(
-        response,
-        "hashed_password"
-    )
-
-
-if __name__ == "__main__":
-    tests = [
-        (
-            "User table structure",
-            test_user_table_structure
-        ),
-        (
-            "Valid user creation schema",
-            test_valid_user_create_schema
-        ),
-        (
-            "Invalid email validation",
-            test_invalid_email
-        ),
-        (
-            "Short password validation",
-            test_short_password
-        ),
-        (
-            "User response schema",
-            test_user_response_schema
-        )
-    ]
-
-    print(
-        "\n===== USER MODEL AND SCHEMA TESTS =====\n"
-    )
-
-    passed = 0
-
-    for name, test_function in tests:
-        try:
-            test_function()
-
-            print(
-                f"{name}: PASS"
-            )
-
-            passed += 1
-
-        except Exception as error:
-            print(
-                f"{name}: FAIL"
-            )
-
-            print(
-                "  Error:",
-                repr(error)
-            )
-
-    print(
-        f"\nResult: {passed}/{len(tests)} "
-        "tests passed."
-    )
+    assert not hasattr(response, "hashed_password")

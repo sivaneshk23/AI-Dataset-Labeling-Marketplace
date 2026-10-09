@@ -1,130 +1,108 @@
-const API_BASE_URL = "http://127.0.0.1:8000";
+/**
+ * Job assignment API calls.
+ *
+ * An assignment links a labeling job to an annotator. The management roles see
+ * every assignment while an annotator only sees their own workload.
+ */
 
-function getAuthHeaders() {
-    const token = localStorage.getItem("access_token");
+import { buildQueryString, request } from "./apiClient";
 
-    if (!token) {
-        throw new Error("Authentication token not found.");
-    }
 
-    return {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-    };
-}
-
+/**
+ * List every job assignment (management roles only).
+ *
+ * @returns {Promise<Array<object>>} All assignments on the platform.
+ */
 export async function getAssignments() {
-    const response = await fetch(
-        `${API_BASE_URL}/api/assignments`,
-        {
-            headers: getAuthHeaders(),
-        }
-    );
-
-    if (!response.ok) {
-        throw new Error(
-            `Failed to load assignments: ${response.status}`
-        );
-    }
-
-    return response.json();
+    return request("/api/assignments");
 }
 
+
+/**
+ * List the assignments of the authenticated annotator.
+ *
+ * @returns {Promise<Array<object>>} The caller's own assignments.
+ */
+export async function getMyAssignments() {
+    return request("/api/assignments/mine");
+}
+
+
+/**
+ * List the assignments created for one labeling job.
+ *
+ * @param {number|string} jobId Labeling job identifier.
+ * @returns {Promise<Array<object>>} The assignments of that job.
+ */
 export async function getAssignmentsByJob(jobId) {
-    const response = await fetch(
-        `${API_BASE_URL}/api/assignments/job/${jobId}`,
-        {
-            headers: getAuthHeaders(),
-        }
-    );
-
-    if (!response.ok) {
-        throw new Error(
-            `Failed to load job assignments: ${response.status}`
-        );
-    }
-
-    return response.json();
+    return request(`/api/assignments/job/${jobId}`);
 }
 
-export async function createAssignment(
-    jobId,
-    workerId
-) {
-    const response = await fetch(
-        `${API_BASE_URL}/api/assignments`,
-        {
-            method: "POST",
-            headers: getAuthHeaders(),
-            body: JSON.stringify({
-                job_id: Number(jobId),
-                worker_id: Number(workerId),
-            }),
-        }
-    );
 
-    if (!response.ok) {
-        const errorData = await response.json().catch(
-            () => ({})
-        );
-
-        throw new Error(
-            errorData.detail ||
-            `Failed to create assignment: ${response.status}`
-        );
-    }
-
-    return response.json();
+/**
+ * Retrieve a single assignment.
+ *
+ * @param {number|string} assignmentId Assignment identifier.
+ * @returns {Promise<object>} The requested assignment.
+ */
+export async function getAssignment(assignmentId) {
+    return request(`/api/assignments/${assignmentId}`);
 }
 
-export async function updateAssignment(
-    assignmentId,
-    status
-) {
-    const response = await fetch(
-        `${API_BASE_URL}/api/assignments/${assignmentId}`,
-        {
-            method: "PUT",
-            headers: getAuthHeaders(),
-            body: JSON.stringify({
-                status,
-            }),
-        }
-    );
 
-    if (!response.ok) {
-        const errorData = await response.json().catch(
-            () => ({})
-        );
-
-        throw new Error(
-            errorData.detail ||
-            `Failed to update assignment: ${response.status}`
-        );
-    }
-
-    return response.json();
+/**
+ * Assign a labeling job to an annotator.
+ *
+ * @param {number|string} jobId Labeling job identifier.
+ * @param {number|string} workerId Annotator user identifier.
+ * @returns {Promise<object>} The created assignment.
+ */
+export async function createAssignment(jobId, workerId) {
+    return request("/api/assignments", {
+        method: "POST",
+        body: {
+            job_id: Number(jobId),
+            worker_id: Number(workerId),
+        },
+    });
 }
 
-export async function deleteAssignment(
-    assignmentId
-) {
-    const response = await fetch(
-        `${API_BASE_URL}/api/assignments/${assignmentId}`,
-        {
-            method: "DELETE",
-            headers: getAuthHeaders(),
-        }
+
+/**
+ * Update the status of an assignment.
+ *
+ * @param {number|string} assignmentId Assignment identifier.
+ * @param {string} status New status (assigned, in_progress, completed).
+ * @returns {Promise<object>} The updated assignment.
+ */
+export async function updateAssignment(assignmentId, status) {
+    return request(`/api/assignments/${assignmentId}`, {
+        method: "PUT",
+        body: { status },
+    });
+}
+
+
+/**
+ * Delete an assignment.
+ *
+ * @param {number|string} assignmentId Assignment identifier.
+ * @returns {Promise<null>} Null when the assignment has been removed.
+ */
+export async function deleteAssignment(assignmentId) {
+    return request(`/api/assignments/${assignmentId}`, {
+        method: "DELETE",
+    });
+}
+
+
+/**
+ * List annotator accounts available for assignment.
+ *
+ * @returns {Promise<Array<object>>} Active annotator accounts.
+ */
+export async function getAssignableAnnotators() {
+    return request(
+        `/api/users/annotators${buildQueryString({ active_only: true })}`
     );
-
-    if (!response.ok) {
-        const errorData = await response.json().catch(
-            () => ({})
-        );
-
-        throw new Error(
-            errorData.detail ||
-            `Failed to delete assignment: ${response.status}`
-        );
-    }
 }

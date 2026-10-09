@@ -2,6 +2,7 @@ function AssignmentList({
     assignments,
     jobs,
     users,
+    readOnly = false,
     onUpdate,
     onDelete,
 }) {
@@ -58,12 +59,9 @@ function AssignmentList({
                                 </h3>
 
                                 <p>
-                                    Annotator:{" "}
-                                    {
-                                        getWorkerName(
-                                            assignment.worker_id
-                                        )
-                                    }
+                                    {readOnly
+                                        ? "Assigned to you"
+                                        : `Annotator: ${getWorkerName(assignment.worker_id)}`}
                                 </p>
 
                                 <p>
@@ -76,6 +74,7 @@ function AssignmentList({
                                 </p>
                             </div>
 
+                            {!readOnly && (
                             <div className="button-group">
                                 <button
                                     type="button"
@@ -101,6 +100,7 @@ function AssignmentList({
                                     Delete
                                 </button>
                             </div>
+                            )}
                         </article>
                     )
                 )}

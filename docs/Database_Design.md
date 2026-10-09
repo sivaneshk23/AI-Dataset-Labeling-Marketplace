@@ -234,3 +234,6 @@ ORM:
 SQLAlchemy
 
 The database schema will later be implemented using SQLAlchemy models in the FastAPI backend.
+## As-built v2 update
+
+The Review-II/Final source tree adds `datasets.owner_id`, upload provenance fields, the `dataset_records` table, `labeling_jobs.annotation_type`, `labeling_jobs.label_options`, and `annotation_tasks.dataset_record_id`. The authoritative current schema is `database/schema.sql`, the incremental migration is `database/migrations/003_dataset_upload_and_job_labels.sql`, and the current ER artifact is `docs/diagrams/ER_Diagram_v2.png` with `ER_Diagram_v2.dbml`/`.dot` sources.

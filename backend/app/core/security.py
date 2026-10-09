@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import bcrypt
 from jose import JWTError, jwt
@@ -10,33 +10,19 @@ def hash_password(password: str) -> str:
     """Hash a plaintext password using bcrypt."""
     password_bytes = password.encode("utf-8")
 
-    hashed_password = bcrypt.hashpw(
-        password_bytes,
-        bcrypt.gensalt()
-    )
+    hashed_password = bcrypt.hashpw(password_bytes, bcrypt.gensalt())
 
     return hashed_password.decode("utf-8")
 
 
-def verify_password(
-    password: str,
-    hashed_password: str
-) -> bool:
+def verify_password(password: str, hashed_password: str) -> bool:
     """Verify a plaintext password against a bcrypt hash."""
-    return bcrypt.checkpw(
-        password.encode("utf-8"),
-        hashed_password.encode("utf-8")
-    )
+    return bcrypt.checkpw(password.encode("utf-8"), hashed_password.encode("utf-8"))
 
 
-def create_access_token(
-    user_id: int,
-    email: str
-) -> str:
+def create_access_token(user_id: int, email: str) -> str:
     """Create a signed JWT access token with an expiration time."""
-    expire = datetime.now(timezone.utc) + timedelta(
-        minutes=settings.access_token_expire_minutes
-    )
+    expire = datetime.now(UTC) + timedelta(minutes=settings.access_token_expire_minutes)
 
     payload = {
         "sub": str(user_id),

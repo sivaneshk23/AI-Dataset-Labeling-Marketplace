@@ -1,0 +1,89 @@
+Table users {
+  id int [pk, increment]
+  name varchar(100)
+  email varchar(255) [unique]
+  hashed_password varchar(255)
+  role varchar(30)
+  is_active boolean
+  created_at timestamp
+}
+Table datasets {
+  id int [pk, increment]
+  owner_id int [ref: > users.id]
+  title varchar(150)
+  description text
+  dataset_type varchar(50)
+  source_filename varchar(255)
+  source_format varchar(20)
+  source_size_bytes int
+  record_count int
+  uploaded_at timestamp
+  created_at timestamp
+}
+Table dataset_records {
+  id int [pk, increment]
+  dataset_id int [ref: > datasets.id]
+  row_number int
+  source_key varchar(255)
+  input_text text
+  metadata_json json
+  created_at timestamp
+  indexes { (dataset_id, row_number) [unique] }
+}
+Table labeling_jobs {
+  id int [pk, increment]
+  dataset_id int [ref: > datasets.id]
+  created_by int [ref: > users.id]
+  title varchar(150)
+  description text
+  status varchar(30)
+  annotation_type varchar(40)
+  label_options json
+  created_at timestamp
+}
+Table job_assignments {
+  id int [pk, increment]
+  job_id int [ref: > labeling_jobs.id]
+  worker_id int [ref: > users.id]
+  status varchar(30)
+  assigned_at timestamp
+}
+Table annotation_tasks {
+  id int [pk, increment]
+  job_id int [ref: > labeling_jobs.id]
+  dataset_record_id int [ref: > dataset_records.id]
+  assigned_to int [ref: > users.id]
+  input_text text
+  status varchar(30)
+  created_at timestamp
+  updated_at timestamp
+}
+Table annotations {
+  id int [pk, increment]
+  task_id int [ref: > annotation_tasks.id]
+  annotator_id int [ref: > users.id]
+  label varchar(120)
+  notes text
+  confidence float
+  ai_suggested_label varchar(120)
+  ai_confidence float
+  status varchar(30)
+  created_at timestamp
+  updated_at timestamp
+}
+Table annotation_reviews {
+  id int [pk, increment]
+  annotation_id int [ref: > annotations.id]
+  reviewer_id int [ref: > users.id]
+  decision varchar(30)
+  comment text
+  created_at timestamp
+}
+Table reviews {
+  id int [pk, increment]
+  job_id int [ref: > labeling_jobs.id]
+  reviewer_id int [ref: > users.id]
+  rating int
+  comment text
+  created_at timestamp
+}

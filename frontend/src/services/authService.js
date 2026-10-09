@@ -1,103 +1,102 @@
-const API_BASE_URL = "http://127.0.0.1:8000";
+/**
+ * Authentication API calls.
+ *
+ * The backend issues a real JWT after checking the credentials against the
+ * database. The token is stored in `localStorage` and attached to every other
+ * request by `apiClient.js`.
+ */
+
+import {
+    clearAccessToken,
+    getAccessToken as readAccessToken,
+    request,
+    requestEnvelope,
+    setAccessToken,
+} from "./apiClient";
 
 
-async function handleResponse(response) {
-    if (!response.ok) {
-        let message = "Request failed.";
-
-        try {
-            const errorData = await response.json();
-
-            message =
-                errorData.detail ||
-                errorData.message ||
-                message;
-        } catch {
-            // Keep default error message.
-        }
-
-        throw new Error(message);
-    }
-
-    return response.json();
-}
-
-
+/**
+ * Register a dataset owner or annotator account.
+ *
+ * @param {object} userData Payload with name, email, password and role.
+ * @returns {Promise<object>} The public profile of the new account.
+ */
 export async function registerUser(userData) {
-    const response = await fetch(
-        `${API_BASE_URL}/api/auth/register`,
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(userData),
-        }
-    );
+    const envelope = await requestEnvelope("/api/auth/register", {
+        method: "POST",
+        body: userData,
+        auth: false,
+    });
 
-    return handleResponse(response);
+    return envelope.data;
 }
 
 
+/**
+ * Sign in and store the returned access token.
+ *
+ * @param {object} credentials Payload with email and password.
+ * @returns {Promise<object>} The token payload (`access_token`, `token_type`).
+ */
 export async function loginUser(credentials) {
-    const response = await fetch(
-        `${API_BASE_URL}/api/auth/login`,
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(credentials),
-        }
-    );
+    const tokenPayload = await request("/api/auth/login", {
+        method: "POST",
+        body: credentials,
+        auth: false,
+    });
 
-    const data = await handleResponse(response);
+    setAccessToken(tokenPayload.access_token);
 
-    localStorage.setItem(
-        "access_token",
-        data.access_token
-    );
-
-    return data;
+    return tokenPayload;
 }
 
 
+/**
+ * Clear the stored token and sign the visitor out.
+ */
 export function logoutUser() {
-    localStorage.removeItem("access_token");
+    clearAccessToken();
 }
 
 
+/**
+ * Read the stored JWT access token.
+ *
+ * @returns {string|null} The token, or null when signed out.
+ */
 export function getAccessToken() {
-    return localStorage.getItem(
-        "access_token"
-    );
+    return readAccessToken();
 }
 
 
+/**
+ * Return True when an access token is stored.
+ *
+ * @returns {boolean} Authentication state based on the stored token.
+ */
 export function isAuthenticated() {
-    return Boolean(getAccessToken());
+    return Boolean(readAccessToken());
 }
+
+
+/**
+ * Fetch the profile of the authenticated user.
+ *
+ * Expired or revoked tokens are cleared so the app falls back to the login
+ * screen instead of showing a broken workspace.
+ *
+ * @returns {Promise<object|null>} The user profile, or null when unavailable.
+ */
 export async function getCurrentUser() {
-    const token = getAccessToken();
-
-    if (!token) {
+    if (!readAccessToken()) {
         return null;
     }
 
-    const response = await fetch(
-        `${API_BASE_URL}/api/auth/me`,
-        {
-            method: "GET",
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        }
-    );
-
-    if (!response.ok) {
+    try {
+        return await request("/api/auth/me");
+    } catch {
         logoutUser();
+
         return null;
     }
-
-    return response.json();
 }

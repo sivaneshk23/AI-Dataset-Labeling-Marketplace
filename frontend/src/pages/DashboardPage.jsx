@@ -1,65 +1,310 @@
-function DashboardPage() {
+/**
+ * Role aware landing screen.
+ *
+ * The dashboard is a real read-only view of the platform: it shows the live
+ * platform summary returned by `/api/analytics/summary`, the AI provider that
+ * is currently active and, depending on the role, the next action to take.
+ *
+ * The screen degrades to an informative error banner when the summary endpoint
+ * is unavailable, so a temporary backend problem never blocks navigation.
+ */
+
+import { useCallback, useEffect, useState } from "react";
+
+import {
+    ErrorBanner,
+    LoadingState,
+    PageHeader,
+    ProgressBar,
+    StatCard,
+} from "../components/ui";
+import { getAIStatus } from "../services/aiService";
+import { getPlatformSummary } from "../services/analyticsService";
+import { errorMessage, formatRatio, humanise } from "../utils/format";
+
+
+const ROLE_ACTIONS = {
+    dataset_owner: [
+        {
+            page: "datasets",
+            title: "Manage datasets",
+            description: "Register the data that needs to be labeled.",
+        },
+        {
+            page: "tasks",
+            title: "Create annotation tasks",
+            description: "Split a dataset into units of work for annotators.",
+        },
+        {
+            page: "quality",
+            title: "Review annotation quality",
+            description: "Approve, reject or request a revision with AI support.",
+        },
+        {
+            page: "exports",
+            title: "Export labeled data",
+            description: "Download the approved labels as CSV or JSON.",
+        },
+    ],
+    administrator: [
+        {
+            page: "users",
+            title: "Administer accounts",
+            description: "Change roles, deactivate or remove accounts.",
+        },
+        {
+            page: "analytics",
+            title: "Monitor the platform",
+            description: "Track workload, completion and AI agreement.",
+        },
+        {
+            page: "quality",
+            title: "Audit annotation quality",
+            description: "Check that reviewer decisions stay consistent.",
+        },
+        {
+            page: "exports",
+            title: "Export labeled data",
+            description: "Download approved labels for downstream training.",
+        },
+    ],
+    annotator: [
+        {
+            page: "workspace",
+            title: "Open my work queue",
+            description: "Label the tasks assigned to you with AI pre-labelling.",
+        },
+        {
+            page: "assignments",
+            title: "My assignments",
+            description: "See which labeling jobs you are working on.",
+        },
+    ],
+};
+
+
+function DashboardPage({ currentUser, onNavigate }) {
+    const [summary, setSummary] = useState(null);
+    const [aiStatus, setAiStatus] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+
+
+    const loadDashboard = useCallback(async () => {
+        setLoading(true);
+        setError("");
+
+        try {
+            const [summaryData, statusData] = await Promise.all([
+                getPlatformSummary(),
+                getAIStatus(),
+            ]);
+
+            setSummary(summaryData);
+            setAiStatus(statusData);
+        } catch (requestError) {
+            setError(
+                errorMessage(
+                    requestError,
+                    "Unable to load the platform dashboard."
+                )
+            );
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+
+    useEffect(() => {
+        let cancelled = false;
+
+        async function load() {
+            if (cancelled) {
+                return;
+            }
+
+            await loadDashboard();
+        }
+
+        load();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [loadDashboard]);
+
+
+    const role = currentUser?.role || "annotator";
+    const actions = ROLE_ACTIONS[role] || ROLE_ACTIONS.annotator;
+    const firstName = (currentUser?.name || "there").split(" ")[0];
+
+
     return (
         <section className="page dashboard-page">
-            <div className="hero">
-                <p className="eyebrow">
-                    AI Dataset Labeling Marketplace
-                </p>
+            <PageHeader
+                eyebrow="Workspace overview"
+                title={`Welcome back, ${firstName}.`}
+                description={
+                    "Human labeling, AI assistance and quality control in "
+                    + "one workflow."
+                }
+                actions={
+                    <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={loadDashboard}
+                    >
+                        Refresh
+                    </button>
+                }
+            />
 
-                <h1>
-                    Dataset labeling,
-                    <br />
-                    organized for AI teams.
-                </h1>
+            <ErrorBanner message={error} />
 
-                <p className="hero-description">
-                    Manage datasets and prepare them for
-                    structured human labeling workflows.
-                </p>
-            </div>
+            {loading && !summary ? (
+                <LoadingState message="Loading platform summary..." />
+            ) : (
+                <>
+                    <div className="stat-grid">
+                        <StatCard
+                            label="Datasets"
+                            value={summary?.total_datasets ?? 0}
+                            hint="Registered data sources"
+                        />
 
-            <div className="dashboard-grid">
-                <article className="dashboard-card">
-                    <span className="card-number">
-                        01
-                    </span>
+                        <StatCard
+                            label="Labeling jobs"
+                            value={summary?.total_jobs ?? 0}
+                            hint={`${summary?.active_jobs ?? 0} active`}
+                        />
 
-                    <h2>Datasets</h2>
+                        <StatCard
+                            label="Annotation tasks"
+                            value={summary?.total_tasks ?? 0}
+                            hint={`${summary?.open_tasks ?? 0} still open`}
+                        />
 
-                    <p>
-                        Create, update, view and delete
-                        datasets through the live backend
-                        API.
-                    </p>
-                </article>
+                        <StatCard
+                            label="Annotations"
+                            value={summary?.total_annotations ?? 0}
+                            hint={
+                                `${summary?.pending_reviews ?? 0} awaiting review`
+                            }
+                        />
 
-                <article className="dashboard-card">
-                    <span className="card-number">
-                        02
-                    </span>
+                        <StatCard
+                            label="Reviewer decisions"
+                            value={summary?.total_reviews ?? 0}
+                            hint="Approved, rejected or revised"
+                        />
 
-                    <h2>Labeling Jobs</h2>
+                        <StatCard
+                            label="AI assistance"
+                            value={summary?.ai_suggestions_used ?? 0}
+                            hint={
+                                summary?.ai_agreement_rate === null ||
+                                summary?.ai_agreement_rate === undefined
+                                    ? "Agreement not measured yet"
+                                    : `Agreement ${summary.ai_agreement_rate}%`
+                            }
+                            tone="positive"
+                        />
+                    </div>
 
-                    <p>
-                        Create structured labeling jobs
-                        from datasets. This module is
-                        coming next.
-                    </p>
-                </article>
+                    <div className="dashboard-columns">
+                        <article className="content-card">
+                            <h2>Labeling completion</h2>
 
-                <article className="dashboard-card">
-                    <span className="card-number">
-                        03
-                    </span>
+                            <ProgressBar
+                                value={
+                                    summary?.annotation_completion_percentage
+                                    ?? 0
+                                }
+                                label="Approved annotations"
+                            />
 
-                    <h2>PostgreSQL</h2>
+                            <div className="mini-metrics">
+                                {Object.entries(
+                                    summary?.tasks_by_status || {}
+                                ).map(([status, count]) => (
+                                    <span className="mini-metric" key={status}>
+                                        {humanise(status)}
+                                        <strong>{count}</strong>
+                                    </span>
+                                ))}
+                            </div>
+                        </article>
 
-                    <p>
-                        Application data is persisted in
-                        the project's PostgreSQL database.
-                    </p>
-                </article>
-            </div>
+                        <article className="content-card">
+                            <h2>AI enhancement</h2>
+
+                            <p className="card-lead">
+                                {aiStatus
+                                    ? `Active provider: ${aiStatus.provider}`
+                                    : "AI provider status unavailable."}
+                            </p>
+
+                            <ul className="plain-list">
+                                <li>
+                                    Model:{" "}
+                                    <strong>
+                                        {aiStatus?.model || "not configured"}
+                                    </strong>
+                                </li>
+
+                                <li>
+                                    External provider:{" "}
+                                    <strong>
+                                        {aiStatus?.external_provider_enabled
+                                            ? "enabled"
+                                            : "disabled (offline provider)"}
+                                    </strong>
+                                </li>
+
+                                <li>
+                                    Minimum confidence:{" "}
+                                    <strong>
+                                        {formatRatio(
+                                            aiStatus?.minimum_confidence
+                                        )}
+                                    </strong>
+                                </li>
+                            </ul>
+
+                            {role !== "annotator" && (
+                                <button
+                                    type="button"
+                                    className="secondary-button"
+                                    onClick={() => onNavigate("analytics")}
+                                >
+                                    Open AI insights
+                                </button>
+                            )}
+                        </article>
+                    </div>
+
+                    <div className="dashboard-grid">
+                        {actions.map((action) => (
+                            <article
+                                className="dashboard-card dashboard-card-action"
+                                key={action.page}
+                            >
+                                <h2>{action.title}</h2>
+
+                                <p>{action.description}</p>
+
+                                <button
+                                    type="button"
+                                    className="primary-button"
+                                    onClick={() => onNavigate(action.page)}
+                                >
+                                    Open
+                                </button>
+                            </article>
+                        ))}
+                    </div>
+                </>
+            )}
         </section>
     );
 }

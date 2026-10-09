@@ -1,0 +1,47 @@
+name: Backend CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Backend lint and tests
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: sqlite:///./ci.db
+      ENVIRONMENT: ci
+      SECRET_KEY: ci-only-secret-not-for-production
+      CORS_ORIGINS: http://localhost:5173
+      AI_PROVIDER: local
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+      - name: Ruff lint
+        run: ruff check backend tests
+      - name: Ruff format check
+        run: ruff format --check backend tests
+      - name: Unit and workflow tests
+        run: pytest -q --cov=backend.app.services --cov-report=term-missing --cov-fail-under=40
+
+  deploy:
+    name: Trigger backend deployment
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deploy hook
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          test -n "$RENDER_DEPLOY_HOOK"
+          curl --fail --silent --show-error --request POST "$RENDER_DEPLOY_HOOK"
